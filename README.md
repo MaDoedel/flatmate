@@ -1,49 +1,57 @@
-<p align="center">
-  <a href="https://www.gatsbyjs.com/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter">
-    <img alt="Gatsby" src="https://www.gatsbyjs.com/Gatsby-Monogram.svg" width="60" />
-  </a>
-</p>
-<h1 align="center">
-  Gatsby Minimal Starter
-</h1>
+# Flatmates Expense Visualizer
 
-## 🚀 Quick start
+**Flatmates Expense Visualizer** is a web-based tool designed to help flatmates easily visualize and calculate the price per area per flatmate, as well as manage shared expenses that can be evenly split among all flatmates. This tool simplifies the process of tracking expenses and ensures that everyone knows what they need to pay at the end of the month.
 
-1.  **Create a Gatsby site.**
+## Features
 
-    Use the Gatsby CLI to create a new site, specifying the minimal starter.
+- **Area-Based Cost Visualization**: Calculate and display the price per square meter for each flatmate based on the total area of the apartment and each flatmate's allocated space.
+- **Add and Split Expenses**: Easily add shared expenses (e.g., utilities, internet, groceries) and automatically split them evenly among all flatmates.
+- **User Management**: Add or remove flatmates dynamically to reflect the current household situation.
+- **Real-Time Updates**: All calculations and updates are performed in real-time, providing immediate feedback on how changes affect individual and shared expenses.
 
-    ```shell
-    # create a new Gatsby site using the minimal starter
-    npm init gatsby
-    ```
+## Getting Started
 
-2.  **Start developing.**
+### Installation
 
-    Navigate into your new site’s directory and start it up.
+1. **Clone the Repository**:
+   ```bash
+   git clone git@github.com:MaDoedel/flatmate.git
+   ```
+   
+2. **Navigate to the Project Directory**:
+   ```bash
+   cd flatmate
+   ```
+   
+3. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+   
+### Running the Application
 
-    ```shell
-    cd my-gatsby-site/
-    npm run develop
-    ```
+To start the development server, run the following command:
 
-3.  **Open the code and start customizing!**
+```bash
+npm run develop
+```
 
-    Your site is now running at http://localhost:8000!
+This will start the application on [http://localhost:8000](http://localhost:8000). Open this link in your browser to view the application.
 
-    Edit `src/pages/index.js` to see your site update in real-time!
+### Usage
 
-4.  **Learn more**
+1. **Set Up the Initial Users**: On the main dashboard, add each flatmate by entering their name and clicking the 'Add' button.
+   
+2. **Assign Area to Each Flatmate**: For each flatmate, input the amount of space (in square meters) they occupy. The tool will automatically calculate and display the price per area for each person.
 
-    - [Documentation](https://www.gatsbyjs.com/docs/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
-    - [Tutorials](https://www.gatsbyjs.com/docs/tutorial/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
-    - [Guides](https://www.gatsbyjs.com/docs/how-to/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
-    - [API Reference](https://www.gatsbyjs.com/docs/api-reference/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
-    - [Plugin Library](https://www.gatsbyjs.com/plugins?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
-    - [Cheat Sheet](https://www.gatsbyjs.com/docs/cheat-sheet/?utm_source=starter&utm_medium=readme&utm_campaign=minimal-starter)
+3. **Add Shared Expenses**: Use the "Add Expense" button to input any shared costs such as rent, utilities, or groceries. The total expense will be split evenly among all flatmates.
 
-## 🚀 Quick start (Netlify)
+4. **View Summary**: The summary section at the bottom of the page provides an overview of each flatmate’s share of the expenses and the total amount they need to pay.
 
-Deploy this starter with one click on [Netlify](https://app.netlify.com/signup):
+### Built With
 
-[<img src="https://www.netlify.com/img/deploy/button.svg" alt="Deploy to Netlify" />](https://app.netlify.com/start/deploy?repository=https://github.com/gatsbyjs/gatsby-starter-minimal)
+- **React**: A JavaScript library for building user interfaces.
+- **Bootstrap**: A front-end framework for developing responsive and mobile-first websites.
+- **JavaScript**: The primary programming language used to develop the application logic.
+- **HTML/CSS**: For structuring and styling the application.
+
