@@ -1,4 +1,9 @@
 import * as React from "react";
+import { PieChart } from '@mui/x-charts/PieChart';
+import { useDrawingArea } from '@mui/x-charts/hooks';
+import { styled } from '@mui/material/styles';
+
+
 function MyHeader() {
   return (
     <head>
@@ -17,7 +22,7 @@ function MyBody() {
   return (
     <body>
       <div class="container text-center pt-4">
-        <div class="row">
+        <div class="row mx-2 my-2">
           <div class="col">
             Column
           </div>
@@ -64,21 +69,26 @@ function MyUsers({ users, setUsers }) {
       newKey++;
     }
 
-    const newUser = {
-      key: newKey,
-      name: name,
-      size: 0,
-    };
+    let maxSizeUser = users.reduce((prev, current) => (prev.size > current.size) ? prev : current, { size: 0 });
 
-    console.log(newKey);
+    const halfSize = maxSizeUser.size / 2;
 
+    const updatedUsers = users.map(user => {
+      if (user.key === maxSizeUser.key) {
+        return { ...user, size: halfSize };
+      }
+      return user;
+    });
+
+    updatedUsers.push({ key: newKey, name: name, size: halfSize });
+
+    setUsers(updatedUsers);
     setName("");
-    setUsers([...users, newUser]);
   }
 
 
   return (
-    <div class="row mt-2  rounded border border-secondary">
+    <div class="row my-2  rounded border border-secondary">
       <div class="col-12 ">
         <table class="table">
           <thead>
@@ -117,9 +127,29 @@ function MyUsers({ users, setUsers }) {
   );
 }
 
+const size = {
+  width: 400,
+  height: 200,
+};
+
+const StyledText = styled('text')(({ theme }) => ({
+  fill: theme.palette.text.primary,
+  textAnchor: 'middle',
+  dominantBaseline: 'central',
+  fontSize: 20,
+}));
+
+function PieCenterLabel({ children }) {
+  const { width, height, left, top } = useDrawingArea();
+  return (
+    <StyledText x={left + width / 2} y={top + height / 2}>
+      {children}
+    </StyledText>
+  );
+}
 
 
-function MyBoard({ users, setUsers }) {
+function MyBoard({ users, setUsers, area}) {
   const [hot, setHot] = React.useState(0);
   const [cold, setCold] = React.useState(0);
 
@@ -127,12 +157,12 @@ function MyBoard({ users, setUsers }) {
     console.log("handleInput");
   }
 
+  const data = users.filter(user => user.size !== 0).map(user => ({ value: user.size, label: user.name }));
+
   return (
-    <div class="row">
-      <div class="col-12">
-        {/* Additional content or heading can go here */}
-      </div>
-      {users.length !== 0 && (
+    <>
+    {users.length !== 0 && (
+      <div class="row">
         <div class="col-12 my-2 mx-2">
           <div class="input-group">
             <span class="input-group-text bi bi-fire"></span>
@@ -142,27 +172,119 @@ function MyBoard({ users, setUsers }) {
             <button class="btn btn-outline-primary" type="button" onClick={handleInput}>Calc</button>
           </div>
         </div>
-      )}
-    </div>
+        <div class="col-12 my-2 mx-2">
+          <PieChart series={[{ data, innerRadius: 80 }]} {...size}>
+          <PieCenterLabel>{area}m&sup2;</PieCenterLabel>
+          </PieChart> 
+        </div>
+      </div>
+    )}
+    </>
+  );
+}
+
+function MyPositions() {
+  const [name, setName] = React.useState("");
+  const [price, setPrice] = React.useState(0);
+  const [positions, setPositions] = React.useState([]);
+
+  function handleNameChange(event) {
+    setName(event.target.value);
+  }
+
+  function handlePriceChange(event) {
+    setPrice(event.target.value);
+  }
+
+  function handlePositionDelete(event) {
+    let key = parseInt(event.currentTarget.getAttribute("data-id", 10));
+    var updatedPosition = positions.filter(position => position.key !== key);
+    setPositions(updatedPosition);
+  }
+
+  function handlePosition(event) {
+    let newKey = 1;
+    while (positions.find(position => position.key === newKey)) {
+      newKey++;
+    }
+    setPositions([...positions, { key: newKey, name: name, price: price }]);
+    setName("");
+    setPrice(0);
+  }
+  
+
+  return (
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">name</th>
+              <th scope="col">price</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {positions.map(position => (   
+                <tr>
+                  <th scope="row">{position.key}</th>
+                  <td>{position.name}</td>
+                  <td>{position.price}</td>
+                  <td> <button class="btn btn-outline-danger" data-id={position.key} onClick={handlePositionDelete}><span class="bi bi-dash-lg"></span></button></td>
+                </tr>
+              ))
+            }
+            <tr>
+              <th scope="row"></th>
+              <td>
+                <input type="text" class="form-control" id="name" name="name" value={name} onChange={handleNameChange}/>
+              </td>
+              <td>
+                <input type="decimal" class="form-control" id="price" name="price" value={price} onChange={handlePriceChange}/>
+              </td>
+              <td><button class="btn btn-outline-success" onClick={handlePosition}><span class="bi bi-plus-lg"></span></button></td>
+            </tr>
+          </tbody>
+        </table>
   );
 }
 
 
-function MyControlPanel() {
+function MyControlPanel(v) {
+  //const [prevsize, setPrevSize] = React.useState(0);
+
   const [size, setSize] = React.useState(0);
   const [users, setUsers] = React.useState([]);
 
   function handleInputChange(event) {
+    //setPrevSize(size);
     setSize(event.target.value); 
   }
 
   function handleInput(event) {
     if (users.length === 0) {
       setUsers([{key: 0, name: "Random User", size: size}]);
-    }
+    } 
+    // else {
+    //   if (prevsize > size) {
+    //     var diff = (prevsize - size) / users.length;
+    //     var updatedUsers = users.map(user => {
+    //       user.size -= diff;
+    //       return user;
+    //     });
+    //     setUsers(updatedUsers);
+    //   } else if (prevsize < size) {
+    //     var diff = (size - prevsize) / users.length;
+    //     var updatedUsers = users.map(user => {
+    //       user.size += diff;
+    //       return user;
+    //     });
+    //     setUsers(updatedUsers);
+    //   }
+    // }
   }
   
   return (
+    <>
     <div class="row rounded border border-secondary">
       <div class="col-5 my-2 mx-2">
         <div class="input-group">
@@ -173,9 +295,15 @@ function MyControlPanel() {
         <MyUsers users={users} setUsers={setUsers}/>
       </div>
       <div class="col">
-        <MyBoard users={users} setUsers={setUsers}/>
+        <MyBoard users={users} setUsers={setUsers} area={size}/>
       </div>
     </div>
+    <div class="row rounded border border-secondary  my-2 ">
+      <div class="col-12 ">
+        <MyPositions/>
+      </div>
+    </div>
+    </>
   );
 }
 
