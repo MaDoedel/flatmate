@@ -2,6 +2,7 @@ import * as React from "react";
 import { PieChart } from '@mui/x-charts/PieChart';
 import { useDrawingArea } from '@mui/x-charts/hooks';
 import { styled } from '@mui/material/styles';
+import { BarChart } from '@mui/x-charts/BarChart';
 
 
 function MyHeader() {
@@ -19,6 +20,8 @@ function MyHeader() {
 }
 
 function MyBody() {
+  const [users, setUsers] = React.useState([]);
+
   return (
     <body>
       <div class="container text-center pt-4">
@@ -27,7 +30,7 @@ function MyBody() {
             Column
           </div>
           <div class="col-8">
-            <MyControlPanel />
+            <MyControlPanel users={users} setUsers={setUsers}/>
           </div>
           <div class="col">
             Column
@@ -150,28 +153,12 @@ function PieCenterLabel({ children }) {
 
 
 function MyBoard({ users, setUsers, area}) {
-  const [hot, setHot] = React.useState(0);
-  const [cold, setCold] = React.useState(0);
-
-  function handleInput(event) {
-    console.log("handleInput");
-  }
-
   const data = users.filter(user => user.size !== 0).map(user => ({ value: user.size, label: user.name }));
 
   return (
     <>
     {users.length !== 0 && (
       <div class="row">
-        <div class="col-12 my-2 mx-2">
-          <div class="input-group">
-            <span class="input-group-text bi bi-fire"></span>
-            <input type="decimal" class="form-control" placeholder="0" value={hot} onChange={(e) => setHot(e.target.value)}/>
-            <span class="input-group-text bi bi-snow2"></span>
-            <input type="decimal" class="form-control" placeholder="0" value={cold} onChange={(e) => setCold(e.target.value)}/>
-            <button class="btn btn-outline-primary" type="button" onClick={handleInput}>Calc</button>
-          </div>
-        </div>
         <div class="col-12 my-2 mx-2">
           <PieChart series={[{ data, innerRadius: 80 }]} {...size}>
           <PieCenterLabel>{area}m&sup2;</PieCenterLabel>
@@ -248,12 +235,62 @@ function MyPositions() {
   );
 }
 
+const uData = [4000, 3000, 2000, 2780, 1890, 2390, 3490];
+const pData = [2400, 1398, 9800, 3908, 4800, 3800, 4300];
+const amtData = [2400, 2210, 2290, 2000, 2181, 2500, 2100];
 
-function MyControlPanel(v) {
+const xLabels = [
+  'Page A',
+  'Page B',
+  'Page C',
+  'Page D',
+  'Page E',
+  'Page F',
+  'Page G',
+];
+
+
+function MyCalc() {
+  const [hot, setHot] = React.useState(0);
+  const [cold, setCold] = React.useState(0);
+
+  function handleInput(event) {
+    console.log("handleInput");
+  }
+
+
+  return (
+    <>
+    <div class="col-12 my-2 mx-2">
+      <div class="input-group">
+        <span class="input-group-text bi bi-fire"></span>
+        <input type="decimal" class="form-control" placeholder="0" value={hot} onChange={(e) => setHot(e.target.value)}/>
+        <span class="input-group-text bi bi-snow2"></span>
+        <input type="decimal" class="form-control" placeholder="0" value={cold} onChange={(e) => setCold(e.target.value)}/>
+        <button class="btn btn-outline-primary" type="button" onClick={handleInput}>Calc</button>
+      </div>
+    </div>
+    <div class="col-12 my-2" >
+      <BarChart
+      width={500}
+      height={300}
+      series={[
+        { data: pData, label: 'pv', stack: 'stack1' },
+        { data: amtData, label: 'amt' },
+        { data: uData, label: 'uv', stack: 'stack1' },
+      ]}
+      yAxis={[{ data: xLabels, scaleType: 'band' }]}
+      layout="horizontal"
+    />
+    </div>
+    </>
+  );
+}
+
+
+function MyControlPanel({users, setUsers}) {
   //const [prevsize, setPrevSize] = React.useState(0);
-
   const [size, setSize] = React.useState(0);
-  const [users, setUsers] = React.useState([]);
 
   function handleInputChange(event) {
     //setPrevSize(size);
@@ -301,6 +338,11 @@ function MyControlPanel(v) {
     <div class="row rounded border border-secondary  my-2 ">
       <div class="col-12 ">
         <MyPositions/>
+      </div>
+    </div>
+    <div class="row rounded border border-secondary  my-2 ">
+      <div class="col-12 ">
+        <MyCalc/>
       </div>
     </div>
     </>
