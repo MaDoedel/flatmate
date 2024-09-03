@@ -48,10 +48,15 @@ This will start the application on [http://localhost:8000](http://localhost:8000
 
 4. **View Summary**: The summary section at the bottom of the page provides an overview of each flatmate’s share of the expenses and the total amount they need to pay.
 
+### Demo
+![Alt text](doc/Screenshot.png)
+
 ### Built With
 
 - **React**: A JavaScript library for building user interfaces.
+- **MUI**: A JavaScript library for data visualization 
 - **Bootstrap**: A front-end framework for developing responsive and mobile-first websites.
 - **JavaScript**: The primary programming language used to develop the application logic.
 - **HTML/CSS**: For structuring and styling the application.
+
 

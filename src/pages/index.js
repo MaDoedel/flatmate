@@ -3,6 +3,7 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { useDrawingArea } from '@mui/x-charts/hooks';
 import { styled } from '@mui/material/styles';
 import { BarChart } from '@mui/x-charts/BarChart';
+import { ScatterChart } from "@mui/x-charts";
 
 
 function MyHeader() {
@@ -27,13 +28,13 @@ function MyBody() {
       <div class="container text-center pt-4">
         <div class="row mx-2 my-2">
           <div class="col">
-            Column
+            <p></p>
           </div>
           <div class="col-8">
             <MyControlPanel users={users} setUsers={setUsers}/>
           </div>
           <div class="col">
-            Column
+            <p></p>
           </div>
         </div>
       </div>
@@ -89,6 +90,20 @@ function MyUsers({ users, setUsers }) {
     setName("");
   }
 
+  function handleChangeName(event) {
+    let key = parseInt(event.currentTarget.getAttribute("data-id", 10));
+    let name = event.currentTarget.value;
+
+    var updatedUsers = users.map(user => {
+      if (user.key === key) {
+        user.name = name;
+      }
+      return user;
+    });
+
+    setUsers(updatedUsers);
+  }
+
 
   return (
     <div class="row my-2  rounded border border-secondary">
@@ -106,7 +121,7 @@ function MyUsers({ users, setUsers }) {
                 
                 <tr>
                   <th scope="row">{user.key}</th>
-                  <td>{user.name}</td>
+                  <td><input class="form-control" type="text" data-id={user.key} value={user.name} onChange={handleChangeName}/></td>
                   <td>
                   {user.key !== 0 && (
                     <button class="btn btn-outline-danger" data-id={user.key} onClick={handleUserDelete}><span class="bi bi-dash-lg"></span></button>
@@ -170,10 +185,9 @@ function MyBoard({ users, setUsers, area}) {
   );
 }
 
-function MyPositions() {
+function MyPositions({positions, setPositions}) {
   const [name, setName] = React.useState("");
   const [price, setPrice] = React.useState(0);
-  const [positions, setPositions] = React.useState([]);
 
   function handleNameChange(event) {
     setName(event.target.value);
@@ -201,88 +215,140 @@ function MyPositions() {
   
 
   return (
-        <table class="table">
-          <thead>
+    <>
+    <div class="col-12 mt-2">
+      <div class="alert alert-primary text-start" role="alert">
+        <h4 class="alert-heading textstart">Positions</h4>
+        A houshold holds positions, such as "Electricity" or "Internet", which are shared among the users. Add those positions here.
+      </div>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">name</th>
+          <th scope="col">price</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {positions.map(position => (   
             <tr>
-              <th scope="col">#</th>
-              <th scope="col">name</th>
-              <th scope="col">price</th>
-              <th scope="col"></th>
+              <th scope="row">{position.key}</th>
+              <td>{position.name}</td>
+              <td>{position.price}</td>
+              <td> <button class="btn btn-outline-danger" data-id={position.key} onClick={handlePositionDelete}><span class="bi bi-dash-lg"></span></button></td>
             </tr>
-          </thead>
-          <tbody>
-            {positions.map(position => (   
-                <tr>
-                  <th scope="row">{position.key}</th>
-                  <td>{position.name}</td>
-                  <td>{position.price}</td>
-                  <td> <button class="btn btn-outline-danger" data-id={position.key} onClick={handlePositionDelete}><span class="bi bi-dash-lg"></span></button></td>
-                </tr>
-              ))
-            }
-            <tr>
-              <th scope="row"></th>
-              <td>
-                <input type="text" class="form-control" id="name" name="name" value={name} onChange={handleNameChange}/>
-              </td>
-              <td>
-                <input type="decimal" class="form-control" id="price" name="price" value={price} onChange={handlePriceChange}/>
-              </td>
-              <td><button class="btn btn-outline-success" onClick={handlePosition}><span class="bi bi-plus-lg"></span></button></td>
-            </tr>
-          </tbody>
-        </table>
+          ))
+        }
+        <tr>
+          <th scope="row"></th>
+          <td>
+            <input type="text" class="form-control" id="name" name="name" value={name} onChange={handleNameChange}/>
+          </td>
+          <td>
+            <input type="decimal" class="form-control" id="price" name="price" value={price} onChange={handlePriceChange}/>
+          </td>
+          <td><button class="btn btn-outline-success" onClick={handlePosition}><span class="bi bi-plus-lg"></span></button></td>
+        </tr>
+      </tbody>
+    </table>
+    </>
   );
 }
 
-const uData = [4000, 3000, 2000, 2780, 1890, 2390, 3490];
-const pData = [2400, 1398, 9800, 3908, 4800, 3800, 4300];
-const amtData = [2400, 2210, 2290, 2000, 2181, 2500, 2100];
-
-const xLabels = [
-  'Page A',
-  'Page B',
-  'Page C',
-  'Page D',
-  'Page E',
-  'Page F',
-  'Page G',
-];
-
-
-function MyCalc() {
+function MyCalc({users, setUsers, area, positions}) {
   const [hot, setHot] = React.useState(0);
   const [cold, setCold] = React.useState(0);
+  const [series, setSeries] = React.useState([]);
+  // const [check, SetCheck] = React.useState(false);
+
+  const yLabels = users.map(user => user.name);
 
   function handleInput(event) {
-    console.log("handleInput");
+    setSeries([]);
+    var sdata = [];
+    
+    // in case someone missinterpret the input
+    var nebenkosten = (hot > cold) ? hot-cold : hot;
+
+    var coldbar = {};
+    var colddata  = [];
+    users.forEach(user => {
+      colddata.push(user.size * cold / area);
+      coldbar.data = colddata;
+      coldbar.label = "Cold";
+      coldbar.stack = "stack";
+    });
+    sdata.push(coldbar);
+
+    
+    var hotbar = {};
+    var hotdata  = [];
+      users.forEach(user => {
+      hotdata.push(nebenkosten / users.length);
+      hotbar.data = hotdata;
+      hotbar.label = "Hot";
+      hotbar.stack = "stack";
+    });
+    sdata.push(hotbar);
+
+
+
+    var bar = {};
+    positions.forEach(position => {
+      var data = []
+      for (let i = 0; i < users.length; i++) {
+        data.push(position.price / users.length);
+      } 
+      bar.data = data;
+      bar.label = position.name;
+      bar.stack = "stack";
+    });
+    sdata.push(bar);
+    setSeries(sdata);
   }
+
+  // function handleCheck(event) {
+  //   SetCheck(event.target.checked);
+  // }
 
 
   return (
     <>
-    <div class="col-12 my-2 mx-2">
-      <div class="input-group">
-        <span class="input-group-text bi bi-fire"></span>
-        <input type="decimal" class="form-control" placeholder="0" value={hot} onChange={(e) => setHot(e.target.value)}/>
-        <span class="input-group-text bi bi-snow2"></span>
-        <input type="decimal" class="form-control" placeholder="0" value={cold} onChange={(e) => setCold(e.target.value)}/>
-        <button class="btn btn-outline-primary" type="button" onClick={handleInput}>Calc</button>
+    <div class="col-12 mt-2">
+      <div class="alert alert-primary text-start" role="alert">
+        <h4 class="alert-heading textstart">Rent Calculation</h4>
+        Within this section, you can calculate the rent for each user. The rent is calculated based on the area of the flat, considering the cold value (rent without heating), while the hot value (heating) is split evenly throughout the household. Additionally, your expenses are added to the calculation.
       </div>
     </div>
+      
+    <div class="col-12 my-2">
+      <div class="input-group">
+        <span class="input-group-text bi bi-snow2"></span>
+        <input type="decimal" class="form-control" placeholder="0" value={cold} onChange={(e) => setCold(e.target.value)}/>
+        <span class="input-group-text bi bi-fire"></span>
+        <input type="decimal" class="form-control" placeholder="0" value={hot} onChange={(e) => setHot(e.target.value)}/>
+        <button class="btn btn-outline-primary" type="button" onClick={handleInput}>Calc</button>
+      </div>
+      {/* <div class="form-check text-start">
+        <input class="form-check-input text-start" type="checkbox" value={check} id="flexCheckChecked" onChange={handleCheck}/>
+        <label class="form-check-label text-start" for="flexCheckChecked">
+          Split hot in equal parts
+        </label>
+      </div> */}
+    </div>
+
+    {users.length !== 0 && (
     <div class="col-12 my-2" >
       <BarChart
-      width={500}
       height={300}
-      series={[
-        { data: pData, label: 'pv', stack: 'stack1' },
-        { data: amtData, label: 'amt' },
-        { data: uData, label: 'uv', stack: 'stack1' },
-      ]}
-      yAxis={[{ data: xLabels, scaleType: 'band' }]}
+      series={series}
+      yAxis={[{ data: yLabels, scaleType: 'band' }]}
       layout="horizontal"
     />
     </div>
+    )}
     </>
   );
 }
@@ -291,6 +357,8 @@ function MyCalc() {
 function MyControlPanel({users, setUsers}) {
   //const [prevsize, setPrevSize] = React.useState(0);
   const [size, setSize] = React.useState(0);
+  const [positions, setPositions] = React.useState([]);
+
 
   function handleInputChange(event) {
     //setPrevSize(size);
@@ -323,6 +391,12 @@ function MyControlPanel({users, setUsers}) {
   return (
     <>
     <div class="row rounded border border-secondary">
+      <div class="col-12 mt-2">
+        <div class="alert alert-primary text-start" role="alert">
+          <h4 class="alert-heading textstart">Spacing</h4>
+          Use this form to define the area of the flat and the users. The area will be divided equally among the users. (TODO: Slider per user)
+        </div>
+      </div>
       <div class="col-5 my-2 mx-2">
         <div class="input-group">
           <span class="input-group-text">m&sup2;</span>
@@ -337,12 +411,12 @@ function MyControlPanel({users, setUsers}) {
     </div>
     <div class="row rounded border border-secondary  my-2 ">
       <div class="col-12 ">
-        <MyPositions/>
+        <MyPositions positions={positions} setPositions={setPositions}/>
       </div>
     </div>
     <div class="row rounded border border-secondary  my-2 ">
       <div class="col-12 ">
-        <MyCalc/>
+        <MyCalc users={users} setUsers={setUsers} positions={positions} setPositions={setPositions} area={size}/>
       </div>
     </div>
     </>
