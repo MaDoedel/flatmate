@@ -3,10 +3,6 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { useDrawingArea } from '@mui/x-charts/hooks';
 import { styled } from '@mui/material/styles';
 import { BarChart } from '@mui/x-charts/BarChart';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Slider from '@mui/material/Slider';
-
 
 function MyHeader() {
   return (
@@ -45,15 +41,11 @@ function MyBody() {
 }
 
 
-function MyUsers({ users, setUsers}) {
+function MyUsers({ users, setUsers, areaDiff, setAreaDiff}) {
   const [name, setName] = React.useState("");
 
   function handleNameChange(event) {
     let value = event.currentTarget.value;
-    if (isNaN(value)) {
-      return;
-    }
-
     setName(value); 
   }
 
@@ -101,10 +93,6 @@ function MyUsers({ users, setUsers}) {
     let key = parseInt(event.currentTarget.getAttribute("data-id", 10));
     let value = event.currentTarget.value;
 
-    if (isNaN(value)) {
-      return;
-    }   
-
     var updatedUsers = users.map(user => {
       if (user.key === key) {
         user.name = value;
@@ -123,8 +111,11 @@ function MyUsers({ users, setUsers}) {
       value = 0;
     }
 
+    var somediff = 0;
     var updatedUsers = users.map(user => {
       if (user.key === key) {
+        somediff = areaDiff + (user.size - value);
+        setAreaDiff(somediff);
         user.size = value;
       }
       return user;
@@ -152,7 +143,7 @@ function MyUsers({ users, setUsers}) {
                 <tr>
                   <th scope="row">{user.key}</th>
                   <td><input class="form-control" type="text" data-id={user.key} value={user.name} onChange={handleChangeName}/></td>
-                  <td><input class="form-control" type="decimal" data-id={user.key} value={user.size} onChange={handleChangeSize}/></td>
+                  <td><input class="form-control" type="number" step="0.01" data-id={user.key} value={user.size} onChange={handleChangeSize}/></td>
                   <td>
                   {user.key !== 0 && (
                     <button class="btn btn-outline-danger" data-id={user.key} onClick={handleUserDelete}><span class="bi bi-dash-lg"></span></button>
@@ -160,14 +151,22 @@ function MyUsers({ users, setUsers}) {
                 </tr>
               ))
             }
-            {users.length !== 0 && 
+            {areaDiff !== 0 && (
+              <tr>
+                <th scope="row"></th>
+                <td><p class="form-control" id="diff" name="name">diff</p></td>
+                <td><p class="form-control" name="diff">{areaDiff}</p></td>   
+                <td></td>
+              </tr>
+            )} 
+            {users.length !== 0 && (
               <tr>
                 <th scope="row"></th>
                 <td><input class="form-control" type="text" id="name" name="name" value={name} onChange={handleNameChange}/></td>
                 <td></td>
                 <td><button class="btn btn-outline-success" onClick={handleName}><span class="bi bi-plus-lg"></span></button></td>
               </tr>
-            } 
+            )} 
           </tbody>
         </table>
       </div>
@@ -197,8 +196,11 @@ function PieCenterLabel({ children }) {
 }
 
 
-function MyBoard({ users, setUsers, area}) {
-  const data = users.filter(user => user.size !== 0).map(user => ({ value: user.size, label: user.name }));
+function MyBoard({ users, area, areaDiff }) {
+  let data = users.filter(user => user.size !== 0).map(user => ({ value: user.size, label: user.name }));
+  if (areaDiff > 0) {
+    data.push({ value: areaDiff, label: "Diff" });
+  }
 
   return (
     <>
@@ -277,12 +279,8 @@ function MyPositions({positions, setPositions}) {
         }
         <tr>
           <th scope="row"></th>
-          <td>
-            <input type="text" class="form-control" id="name" name="name" value={name} onChange={handleNameChange}/>
-          </td>
-          <td>
-            <input type="decimal" class="form-control" id="price" name="price" value={price} onChange={handlePriceChange}/>
-          </td>
+          <td><input type="text" class="form-control" id="name" name="name" value={name} onChange={handleNameChange}/></td>
+          <td><input type="number" step="0.01" class="form-control" id="price" name="price" value={price} onChange={handlePriceChange}/></td>
           <td><button class="btn btn-outline-success" onClick={handlePosition}><span class="bi bi-plus-lg"></span></button></td>
         </tr>
       </tbody>
@@ -291,10 +289,11 @@ function MyPositions({positions, setPositions}) {
   );
 }
 
-function MyCalc({users, area, positions}) {
+function MyCalc({users, area, positions, areaDiff}) {
   const [hot, setHot] = React.useState(0);
   const [cold, setCold] = React.useState(0);
   const [series, setSeries] = React.useState([]);
+
 
   function hotChange(event) {
     let value = parseFloat(event.currentTarget.value);
@@ -343,18 +342,20 @@ function MyCalc({users, area, positions}) {
     sdata.push(hotbar);
 
 
-
-    var bar = {};
-    positions.forEach(position => {
-      var data = []
-      for (let i = 0; i < users.length; i++) {
-        data.push(position.price / users.length);
-      } 
-      bar.data = data;
-      bar.label = position.name;
-      bar.stack = "stack";
-    });
-    sdata.push(bar);
+    if (positions.length > 0) {
+      var bar = {};
+      positions.forEach(position => {
+        var data = []
+        for (let i = 0; i < users.length; i++) {
+          data.push(position.price / users.length);
+        } 
+        bar.data = data;
+        bar.label = position.name;
+        bar.stack = "stack";
+      });
+      sdata.push(bar);
+    }
+   
     setSeries(sdata);
   }
 
@@ -368,35 +369,42 @@ function MyCalc({users, area, positions}) {
     <div class="col-12 mt-2">
       <div class="alert alert-primary text-start" role="alert">
         <h4 class="alert-heading textstart">Rent Calculation</h4>
-        Within this section, you can calculate the rent for each user. The rent is calculated based on the area of the flat, considering the cold value (rent without heating), while the hot value (heating) is split evenly throughout the household. Additionally, your expenses are added to the calculation.
-      </div>
+          Within this section, you can calculate the rent for each user. The rent is calculated based on the area of the flat, with the cold value (rent without heating) split among the users, while the hot value (heating) is equally distributed. Additionally, your expenses are added to the calculation. If a difference value results from 'Spacing', the user is informed to adjust the area first.</div>
     </div>
       
     <div class="col-12 my-2">
       <div class="input-group">
         <span class="input-group-text bi bi-snow2"></span>
-        <input type="decimal" class="form-control" placeholder="0" value={cold} onChange={coldChange}/>
+        <input type="number" step="0.01" class="form-control" placeholder="0" value={cold} onChange={coldChange}/>
         <span class="input-group-text bi bi-fire"></span>
-        <input type="decimal" class="form-control" placeholder="0" value={hot} onChange={hotChange}/>
-        <button class="btn btn-outline-primary" type="button" onClick={handleInput}>Calc</button>
+        <input type="number" step="0.01" class="form-control" placeholder="0" value={hot} onChange={hotChange}/>
+        <button class="btn btn-outline-primary" type="button" onClick={handleInput} disabled={areaDiff !== 0}>Calc</button>
       </div>
-      {/* <div class="form-check text-start">
-        <input class="form-check-input text-start" type="checkbox" value={check} id="flexCheckChecked" onChange={handleCheck}/>
-        <label class="form-check-label text-start" for="flexCheckChecked">
-          Split hot in equal parts
-        </label>
-      </div> */}
     </div>
+    {areaDiff > 0  && (
+      <div class="col-12 mt-2">
+        <div class="alert alert-warning text-start" role="alert">
+          Split the area {areaDiff}m&sup2; among the users first.
+        </div>
+      </div>
+    )}
+    {areaDiff < 0  && (
+      <div class="col-12 mt-2">
+        <div class="alert alert-warning text-start" role="alert">
+          Your users have too much area. Reduce the area by {Math.abs(areaDiff)}m&sup2; first.
+        </div>
+      </div>
+    )}
 
-    {users.length !== 0 && (
-    <div class="col-12 my-2" >
-      <BarChart
-      height={300}
-      series={series}
-      yAxis={[{ data: yLabels, scaleType: 'band' }]}
-      layout="horizontal"
-    />
-    </div>
+    {users.length !== 0 && areaDiff === 0 && cold > 0 && hot > 0 && (
+      <div class="col-12 my-2" >
+        <BarChart
+        height={300}
+        series={series}
+        yAxis={[{ data: yLabels, scaleType: 'band' }]}
+        layout="horizontal"
+      />
+      </div>
     )}
     </>
   );
@@ -407,6 +415,7 @@ function MyControlPanel({users, setUsers}) {
   //const [prevsize, setPrevSize] = React.useState(0);
   const [size, setSize] = React.useState(0);
   const [positions, setPositions] = React.useState([]);
+  const [areaDiff, setAreaDiff] = React.useState(0);
 
 
 
@@ -416,6 +425,8 @@ function MyControlPanel({users, setUsers}) {
       value = 0;
     }
     setSize(value); 
+    setUsers([]);
+    setAreaDiff(0);
   }
 
   function handleInput(event) {
@@ -428,19 +439,19 @@ function MyControlPanel({users, setUsers}) {
       <div class="col-12 mt-2">
         <div class="alert alert-primary text-start" role="alert">
           <h4 class="alert-heading textstart">Spacing</h4>
-          Use this form to define the area of the flat and the users. The area will be divided equally among the users. (TODO: Slider per user)
+          Use this form to define the area of the flat and the users. The area will be divided equally among the users, but is adjustable. If the kummulative area of the users differs from the flat area, the difference will be shown in the "diff" field.
         </div>
       </div>
       <div class="col-5 my-2 mx-2">
         <div class="input-group">
           <span class="input-group-text">m&sup2;</span>
-          <input type="decimal" class="form-control" aria-label="Amount (to the nearest dollar)" id="size" name="size" onChange={handleInputChange} value={size}/> 
+          <input type="number" step="0.01" class="form-control" aria-label="Amount (to the nearest dollar)" id="size" name="size" onChange={handleInputChange} value={size}/> 
           <button class="btn btn-outline-primary" type="button" onClick={handleInput}> Button</button>
         </div>
-        <MyUsers users={users} setUsers={setUsers}/>
+        <MyUsers users={users} setUsers={setUsers} areaDiff={areaDiff} setAreaDiff={setAreaDiff}/>
       </div>
       <div class="col">
-        <MyBoard users={users} setUsers={setUsers} area={size}/>
+        <MyBoard users={users} setUsers={setUsers} area={size} areaDiff={areaDiff}/>
       </div>
     </div>
     <div class="row rounded border border-secondary  my-2 ">
@@ -450,7 +461,7 @@ function MyControlPanel({users, setUsers}) {
     </div>
     <div class="row rounded border border-secondary  my-2 ">
       <div class="col-12 ">
-        <MyCalc users={users} setUsers={setUsers} positions={positions} setPositions={setPositions} area={size}/>
+        <MyCalc users={users} setUsers={setUsers} positions={positions} setPositions={setPositions} area={size} areaDiff={areaDiff}/>
       </div>
     </div>
     </>

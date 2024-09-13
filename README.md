@@ -33,7 +33,7 @@
 To start the development server, run the following command:
 
 ```bash
-npm run develop
+gatsby develop
 ```
 
 This will start the application on [http://localhost:8000](http://localhost:8000). Open this link in your browser to view the application.
