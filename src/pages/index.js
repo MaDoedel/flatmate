@@ -3,7 +3,9 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { useDrawingArea } from '@mui/x-charts/hooks';
 import { styled } from '@mui/material/styles';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { ScatterChart } from "@mui/x-charts";
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Slider from '@mui/material/Slider';
 
 
 function MyHeader() {
@@ -43,11 +45,16 @@ function MyBody() {
 }
 
 
-function MyUsers({ users, setUsers }) {
+function MyUsers({ users, setUsers}) {
   const [name, setName] = React.useState("");
 
   function handleNameChange(event) {
-    setName(event.target.value); 
+    let value = event.currentTarget.value;
+    if (isNaN(value)) {
+      return;
+    }
+
+    setName(value); 
   }
 
   function handleUserDelete(event) {
@@ -92,11 +99,33 @@ function MyUsers({ users, setUsers }) {
 
   function handleChangeName(event) {
     let key = parseInt(event.currentTarget.getAttribute("data-id", 10));
-    let name = event.currentTarget.value;
+    let value = event.currentTarget.value;
+
+    if (isNaN(value)) {
+      return;
+    }   
 
     var updatedUsers = users.map(user => {
       if (user.key === key) {
-        user.name = name;
+        user.name = value;
+      }
+      return user;
+    });
+
+    setUsers(updatedUsers);
+  }
+
+  function handleChangeSize(event) {
+    let key = parseInt(event.currentTarget.getAttribute("data-id", 10));
+    let value = parseFloat(event.currentTarget.value);
+
+    if (isNaN(value) || value < 0) {
+      value = 0;
+    }
+
+    var updatedUsers = users.map(user => {
+      if (user.key === key) {
+        user.size = value;
       }
       return user;
     });
@@ -113,6 +142,7 @@ function MyUsers({ users, setUsers }) {
             <tr>
               <th scope="col">#</th>
               <th scope="col">name</th>
+              <th scope="col">area</th>
               <th scope="col"></th>
             </tr>
           </thead>
@@ -122,6 +152,7 @@ function MyUsers({ users, setUsers }) {
                 <tr>
                   <th scope="row">{user.key}</th>
                   <td><input class="form-control" type="text" data-id={user.key} value={user.name} onChange={handleChangeName}/></td>
+                  <td><input class="form-control" type="decimal" data-id={user.key} value={user.size} onChange={handleChangeSize}/></td>
                   <td>
                   {user.key !== 0 && (
                     <button class="btn btn-outline-danger" data-id={user.key} onClick={handleUserDelete}><span class="bi bi-dash-lg"></span></button>
@@ -132,9 +163,8 @@ function MyUsers({ users, setUsers }) {
             {users.length !== 0 && 
               <tr>
                 <th scope="row"></th>
-                <td>
-                  <input type="text" class="form-control" id="name" name="name" value={name} onChange={handleNameChange}/>
-                </td>
+                <td><input class="form-control" type="text" id="name" name="name" value={name} onChange={handleNameChange}/></td>
+                <td></td>
                 <td><button class="btn btn-outline-success" onClick={handleName}><span class="bi bi-plus-lg"></span></button></td>
               </tr>
             } 
@@ -194,7 +224,11 @@ function MyPositions({positions, setPositions}) {
   }
 
   function handlePriceChange(event) {
-    setPrice(event.target.value);
+    let value = parseFloat(event.currentTarget.value);
+    if (isNaN(value) || value < 0) {
+      value = 0;
+    }
+    setPrice(value);
   }
 
   function handlePositionDelete(event) {
@@ -257,11 +291,26 @@ function MyPositions({positions, setPositions}) {
   );
 }
 
-function MyCalc({users, setUsers, area, positions}) {
+function MyCalc({users, area, positions}) {
   const [hot, setHot] = React.useState(0);
   const [cold, setCold] = React.useState(0);
   const [series, setSeries] = React.useState([]);
-  // const [check, SetCheck] = React.useState(false);
+
+  function hotChange(event) {
+    let value = parseFloat(event.currentTarget.value);
+    if (isNaN(value) || value < 0) {
+      value = 0;
+    }
+    setHot(value);
+  }
+
+  function coldChange(event) {
+    let value = parseFloat(event.currentTarget.value);
+    if (isNaN(value) || value < 0) {
+      value = 0;
+    }
+    setCold(value);
+  }
 
   const yLabels = users.map(user => user.name);
 
@@ -326,9 +375,9 @@ function MyCalc({users, setUsers, area, positions}) {
     <div class="col-12 my-2">
       <div class="input-group">
         <span class="input-group-text bi bi-snow2"></span>
-        <input type="decimal" class="form-control" placeholder="0" value={cold} onChange={(e) => setCold(e.target.value)}/>
+        <input type="decimal" class="form-control" placeholder="0" value={cold} onChange={coldChange}/>
         <span class="input-group-text bi bi-fire"></span>
-        <input type="decimal" class="form-control" placeholder="0" value={hot} onChange={(e) => setHot(e.target.value)}/>
+        <input type="decimal" class="form-control" placeholder="0" value={hot} onChange={hotChange}/>
         <button class="btn btn-outline-primary" type="button" onClick={handleInput}>Calc</button>
       </div>
       {/* <div class="form-check text-start">
@@ -360,32 +409,17 @@ function MyControlPanel({users, setUsers}) {
   const [positions, setPositions] = React.useState([]);
 
 
+
   function handleInputChange(event) {
-    //setPrevSize(size);
-    setSize(event.target.value); 
+    let value = parseFloat(event.currentTarget.value);
+    if (isNaN(value) || value < 0) {
+      value = 0;
+    }
+    setSize(value); 
   }
 
   function handleInput(event) {
-    if (users.length === 0) {
-      setUsers([{key: 0, name: "Random User", size: size}]);
-    } 
-    // else {
-    //   if (prevsize > size) {
-    //     var diff = (prevsize - size) / users.length;
-    //     var updatedUsers = users.map(user => {
-    //       user.size -= diff;
-    //       return user;
-    //     });
-    //     setUsers(updatedUsers);
-    //   } else if (prevsize < size) {
-    //     var diff = (size - prevsize) / users.length;
-    //     var updatedUsers = users.map(user => {
-    //       user.size += diff;
-    //       return user;
-    //     });
-    //     setUsers(updatedUsers);
-    //   }
-    // }
+    setUsers([{key: 0, name: "Random User", size: size}]);
   }
   
   return (
