@@ -293,6 +293,7 @@ function MyCalc({users, area, positions, areaDiff}) {
   const [hot, setHot] = React.useState(0);
   const [cold, setCold] = React.useState(0);
   const [series, setSeries] = React.useState([]);
+  const [totals, setTotals] = React.useState({});
 
 
   function hotChange(event) {
@@ -314,6 +315,14 @@ function MyCalc({users, area, positions, areaDiff}) {
   const yLabels = users.map(user => user.name);
 
   function handleInput(event) {
+    // also calculate the total
+    setTotals({});
+
+    var dict = {};
+    users.forEach(user => {
+      dict[user.name] = 0;
+    });
+
     setSeries([]);
     var sdata = [];
     
@@ -327,35 +336,40 @@ function MyCalc({users, area, positions, areaDiff}) {
       coldbar.data = colddata;
       coldbar.label = "Cold";
       coldbar.stack = "stack";
+
+      dict[user.name] += user.size * cold / area;
     });
     sdata.push(coldbar);
 
+    if (nebenkosten !== 0 ){
+      var hotbar = {};
+      var hotdata  = [];
+        users.forEach(user => {
+        hotdata.push(nebenkosten / users.length);
+        hotbar.data = hotdata;
+        hotbar.label = "Hot";
+        hotbar.stack = "stack";
+        dict[user.name] += nebenkosten / users.length;
+      });
+      sdata.push(hotbar);
+    }
     
-    var hotbar = {};
-    var hotdata  = [];
-      users.forEach(user => {
-      hotdata.push(nebenkosten / users.length);
-      hotbar.data = hotdata;
-      hotbar.label = "Hot";
-      hotbar.stack = "stack";
-    });
-    sdata.push(hotbar);
-
-
     if (positions.length > 0) {
-      var bar = {};
       positions.forEach(position => {
-        var data = []
+        var bar = {};
+        var data = [];
         for (let i = 0; i < users.length; i++) {
           data.push(position.price / users.length);
+          dict[users[i].name] += position.price / users.length;
         } 
         bar.data = data;
         bar.label = position.name;
         bar.stack = "stack";
+        sdata.push(bar);
       });
-      sdata.push(bar);
     }
-   
+    
+    setTotals(dict);
     setSeries(sdata);
   }
 
@@ -396,7 +410,7 @@ function MyCalc({users, area, positions, areaDiff}) {
       </div>
     )}
 
-    {users.length !== 0 && areaDiff === 0 && cold > 0 && hot > 0 && (
+    {users.length !== 0 && areaDiff === 0 && cold > 0 && (
       <div class="col-12 my-2" >
         <BarChart
         height={300}
@@ -404,6 +418,31 @@ function MyCalc({users, area, positions, areaDiff}) {
         yAxis={[{ data: yLabels, scaleType: 'band' }]}
         layout="horizontal"
       />
+      </div>
+    )}
+
+    {Object.keys(totals).length !== 0 && (
+      <div class="col-12 my-2">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">name</th>
+              <th scope="col">total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.keys(totals).map(key => (
+              <tr>
+                <td>{key}</td>
+                <td>{totals[key].toFixed(2)}</td>
+              </tr>
+            ))}
+              <tr>
+                <td></td>
+                <td>{Object.values(totals).reduce((acc, value) => acc + value, 0).toFixed(2)}</td> 
+              </tr>
+          </tbody>
+        </table>
       </div>
     )}
     </>

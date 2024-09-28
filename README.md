@@ -49,7 +49,7 @@ This will start the application on [http://localhost:8000](http://localhost:8000
 4. **View Summary**: The summary section at the bottom of the page provides an overview of each flatmate’s share of the expenses and the total amount they need to pay.
 
 ### Demo
-![Alt text](doc/Screenshot.png)
+![Alt text](doc/screenshot.png)
 
 ### Built With
 
